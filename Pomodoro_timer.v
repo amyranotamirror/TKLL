@@ -54,6 +54,7 @@ module Pomodoro_timer(
     wire                        vld;
     reg                         stop;
     reg [3:0]                   state, next_state;
+    wire [3:0]                  btn_detector;
     
     reg [3:0]                   LED_0, LED_1, LED_2, LED_3, LED_4, LED_5, LED_6, LED_7;
     wire [7:0]                  NUM_0, NUM_1, NUM_2, NUM_3, NUM_4, NUM_5, NUM_6, NUM_7;
@@ -73,13 +74,13 @@ module Pomodoro_timer(
             end
         end
         
-    always @(btn, rst) begin
+    always @(btn_detector or rst) begin
         stop <= 1'b0;
         if (rst) next_state <= DEFAULT_STATE;
         else begin
-            next_state <= btn;
+            next_state = btn;
             state <= next_state;
-            case(btn)
+            case(btn_detector)
                 BTN3: begin 
                     set_time = mins5;//5 minutes
                     if (state != BTN3) mod_cnt = 'd0;
@@ -101,7 +102,7 @@ module Pomodoro_timer(
     
     assign one_second_enable = (one_second_counter == COUNT_LIM - 1) ? 1 : 0;
     always @(posedge clk or posedge rst) begin
-        if(rst) begin
+        if(rst || btn) begin
             displayed_number <= 0;
             {LED_0, LED_1, LED_2, LED_3, LED_4, LED_5, LED_6, LED_7} = {LED_WIDTH{1'b0}};
         end
@@ -114,10 +115,10 @@ module Pomodoro_timer(
             if (displayed_number == set_time)
               begin
                 mod_cnt = mod_cnt + 1;
-                LED_0 = (mod_cnt)/1000;
-                LED_1 = (mod_cnt % 1000)/100;
-                LED_2 = ((mod_cnt % 1000)%100)/10;
-                LED_3 = ((mod_cnt % 1000)%100)%10; 
+                LED_3 = (mod_cnt)/1000;
+                LED_2 = (mod_cnt % 1000)/100;
+                LED_1 = ((mod_cnt % 1000)%100)/10;
+                LED_0 = ((mod_cnt % 1000)%100)%10; 
                 displayed_number <= 0;
                 stop <= 1'b1;                     
               end
@@ -131,6 +132,20 @@ module Pomodoro_timer(
     end
     wire ready;
     assign vld = ready;
+    
+    BCD_7_Segment display_0(.BCD(LED_0), .segment(NUM_0));
+    BCD_7_Segment display_1(.BCD(LED_1), .segment(NUM_1));
+    BCD_7_Segment display_2(.BCD(LED_2), .segment(NUM_2));
+    BCD_7_Segment display_3(.BCD(LED_3), .segment(NUM_3));
+    BCD_7_Segment display_4(.BCD(LED_4), .segment(NUM_4));
+    BCD_7_Segment display_5(.BCD(LED_5), .segment(NUM_5));
+    BCD_7_Segment display_6(.BCD(LED_6), .segment(NUM_6));
+    BCD_7_Segment display_7(.BCD(LED_7), .segment(NUM_7));
+    
+    edge_detector dectector0(.clk(clk), .rst(rst), .in(btn[0]), .out(btn_detector[0]));
+    edge_detector dectector1(.clk(clk), .rst(rst), .in(btn[1]), .out(btn_detector[1]));
+    edge_detector dectector2(.clk(clk), .rst(rst), .in(btn[2]), .out(btn_detector[2]));
+    edge_detector dectector3(.clk(clk), .rst(rst), .in(btn[3]), .out(btn_detector[3]));
     
     always @(posedge clk) begin
         if (rst) data <= {NUM_0, 8'h01};
@@ -150,14 +165,7 @@ module Pomodoro_timer(
         end
     end
  
-    BCD_7_Segment display_0(.BCD(LED_0), .segment(NUM_0));
-    BCD_7_Segment display_1(.BCD(LED_1), .segment(NUM_1));
-    BCD_7_Segment display_2(.BCD(LED_2), .segment(NUM_2));
-    BCD_7_Segment display_3(.BCD(LED_3), .segment(NUM_3));
-    BCD_7_Segment display_4(.BCD(LED_4), .segment(NUM_4));
-    BCD_7_Segment display_5(.BCD(LED_5), .segment(NUM_5));
-    BCD_7_Segment display_6(.BCD(LED_6), .segment(NUM_6));
-    BCD_7_Segment display_7(.BCD(LED_7), .segment(NUM_7));
+    
     
     mfe_led7seg_74hc595_controller led7seg_ctrl(
         .clk    (clk),
