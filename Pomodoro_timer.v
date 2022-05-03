@@ -26,7 +26,8 @@ module Pomodoro_timer(
     btn,
     sclk,
     rclk,
-    dio
+    dio,
+    displayed_number
     );
     
     input clk; //Default Arty-Z7 Clock: 125 MHz
@@ -35,6 +36,7 @@ module Pomodoro_timer(
     output sclk; //Shift data signal
     output rclk; //Storage register signal
     output dio; //Sequential input data for Module 8 LED 7 Segment
+    output reg [15:0] displayed_number;
     
     parameter       COUNT_LIM = 27'd125000000; //Count up to 125M ticks (1s)
     parameter       LED_WIDTH = 'd32; //4-bit binary with 8 digits (4x8 = 32 bits)
@@ -47,7 +49,7 @@ module Pomodoro_timer(
                     
     reg [15:0]                  data;
     reg [2:0]                   cnt;
-    reg [15:0]                  displayed_number = 'd0;
+    //reg [15:0]                  displayed_number = 'd0;
     reg [15:0]                  set_time;
     reg [15:0]                  mod_cnt;
     reg [26:0]                  one_second_counter; 
@@ -57,7 +59,7 @@ module Pomodoro_timer(
 //    reg [DIG_WIDTH - 1:0]       BCD;
 //    reg [LED_WIDTH - 1:0]       LED;
     
-    wire            seconds;
+    //wire [15:0]     seconds;
     reg [3:0]       LED_0;
     reg [3:0]       LED_1;
     reg [3:0]       LED_2;
@@ -91,7 +93,7 @@ module Pomodoro_timer(
     always @(btn)
     begin
         case(btn)
-        BTN3: begin set_time = 'd300;//5 minutes
+        BTN3: begin set_time = 'd20;//5 minutes
                        mod_cnt = 'd0;
                  end
         BTN2: begin set_time = 'd600;//10 minutes
@@ -108,19 +110,18 @@ module Pomodoro_timer(
     end
     
     assign one_second_enable = (one_second_counter == COUNT_LIM - 1) ? 1 : 0;
-    assign seconds = set_time-displayed_number;
-    
     always @(posedge clk or posedge rst) begin
+        if(~btn) displayed_number <= 0;
         if(rst) begin
             displayed_number <= 0;
             {LED_0, LED_1, LED_2, LED_3, LED_4, LED_5, LED_6, LED_7} = {LED_WIDTH{1'b0}};
         end
         else if(one_second_enable) begin
             displayed_number <= displayed_number + 1;
-            LED_4 <= seconds /600;
-            LED_5 <= (seconds % 600)/60;
-            LED_6 <= ((seconds % 600)%60)/10;
-            LED_7 <= ((seconds % 600)%60)%10;
+            LED_4 <= (set_time - displayed_number) /600;
+            LED_5 <= ((set_time - displayed_number) % 600)/60;
+            LED_6 <= (((set_time - displayed_number) % 600)%60)/10;
+            LED_7 <= (((set_time - displayed_number) % 600)%60)%10;
             if (displayed_number == set_time)
               begin
                 mod_cnt <= mod_cnt + 1;
@@ -138,7 +139,7 @@ module Pomodoro_timer(
             cnt <= cnt + 1'b1; 
         end
     end
-wire ready;
+    wire ready;
     assign vld = ready;
     
     always @(posedge clk) begin
