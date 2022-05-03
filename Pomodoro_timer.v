@@ -29,16 +29,16 @@ module Pomodoro_timer(
     dio
     );
     
-    input clk;
-    input rst;
-    input [3:0] btn;
-    output sclk;
-    output rclk;
-    output dio;
+    input clk; //Default Arty-Z7 Clock: 125 MHz
+    input rst; //Reset Switch
+    input [3:0] btn; //Button to change modes
+    output sclk; //Shift data signal
+    output rclk; //Storage register signal
+    output dio; //Sequential input data for Module 8 LED 7 Segment
     
-    parameter       COUNT_LIM = 27'd125000000;
-    parameter       LED_WIDTH = 'd32;
-    parameter       DIG_WIDTH = 'd64;
+    parameter       COUNT_LIM = 27'd125000000; //Count up to 125M ticks (1s)
+    parameter       LED_WIDTH = 'd32; //4-bit binary with 8 digits (4x8 = 32 bits)
+    //parameter       DIG_WIDTH = 'd64;
     
     
                     
