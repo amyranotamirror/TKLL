@@ -73,11 +73,15 @@ module Pomodoro_timer(
                     one_second_counter <= one_second_counter + 1;
             end
         end
+    assign one_second_enable = (one_second_counter == COUNT_LIM - 1) ? 1 : 0;
         
     always @(btn_detector or rst) begin
-        stop <= 1'b0;
-        if (rst) next_state <= DEFAULT_STATE;
+        if (rst) begin
+            next_state <= DEFAULT_STATE;
+            set_time = 4'b0000;
+        end
         else begin
+            stop <= 1'b0;
             next_state = btn;
             state <= next_state;
             case(btn_detector)
@@ -100,7 +104,7 @@ module Pomodoro_timer(
         end
     end
     
-    assign one_second_enable = (one_second_counter == COUNT_LIM - 1) ? 1 : 0;
+    
     always @(posedge clk or posedge rst) begin
         if(rst || btn) begin
             displayed_number <= 0;
@@ -112,9 +116,10 @@ module Pomodoro_timer(
             LED_6 <= ((set_time - displayed_number) % 600)/60;
             LED_5 <= (((set_time - displayed_number) % 600)%60)/10;
             LED_4 <= (((set_time - displayed_number) % 600)%60)%10;
-            if (displayed_number == set_time)
+            if (displayed_number == set_time - 1)
               begin
-                mod_cnt = mod_cnt + 1;
+                if(set_time != 0)
+                    mod_cnt = mod_cnt + 1;
                 LED_3 = (mod_cnt)/1000;
                 LED_2 = (mod_cnt % 1000)/100;
                 LED_1 = ((mod_cnt % 1000)%100)/10;

@@ -32,7 +32,6 @@ module Pomodoro_display(
     displayed_number,
     mod_cnt,
     one_second_counter,
-    state, next_state,
     LED_0, LED_1, LED_2, LED_3, LED_4, LED_5, LED_6, LED_7,
     NUM_0, NUM_1, NUM_2, NUM_3, NUM_4, NUM_5, NUM_6, NUM_7
     );
@@ -48,8 +47,7 @@ module Pomodoro_display(
     output reg [15:0]   displayed_number,
                         mod_cnt;
     output reg [26:0]   one_second_counter;
-    output reg [3:0]    next_state, state,
-                        LED_0, LED_1, LED_2, LED_3, LED_4, LED_5, LED_6, LED_7;
+    output reg [3:0]    LED_0, LED_1, LED_2, LED_3, LED_4, LED_5, LED_6, LED_7;
     output [7:0]        NUM_0, NUM_1, NUM_2, NUM_3, NUM_4, NUM_5, NUM_6, NUM_7;
                      
     
@@ -63,10 +61,12 @@ module Pomodoro_display(
     reg [15:0]                  data;
     reg [2:0]                   cnt;
     reg [15:0]                  set_time;
+    reg                         stop;
+    reg [3:0]                   state, next_state;
     wire [3:0]                  btn_detector;
     wire                        one_second_enable;
     wire                        vld;
-    reg                         stop;
+    
     
     always @(posedge clk or posedge rst)
         begin
@@ -82,11 +82,15 @@ module Pomodoro_display(
                     one_second_counter <= one_second_counter + 1;
             end
         end 
+    assign one_second_enable = (one_second_counter == COUNT_LIM - 1) ? 1 : 0;
     
-    always @(btn_detector or rst) begin
-    stop <= 1'b0;
-    if (rst) next_state <= DEFAULT_STATE;
+    always @(btn_detector or posedge rst) begin
+    if (rst) begin
+        next_state <= DEFAULT_STATE;
+        set_time <= 1'b0;
+    end
     else begin
+        stop <= 1'b0;
         next_state <= btn;
         state <= next_state;
         case(btn_detector)
@@ -109,7 +113,6 @@ module Pomodoro_display(
         end
     end
     
-    assign one_second_enable = (one_second_counter == COUNT_LIM - 1) ? 1 : 0;
     always @(posedge clk or posedge rst) begin
         if(rst || btn) begin
             displayed_number <= 0;
@@ -121,9 +124,9 @@ module Pomodoro_display(
             LED_6 <= ((set_time - displayed_number) % 600)/60;
             LED_5 <= (((set_time - displayed_number) % 600)%60)/10;
             LED_4 <= (((set_time - displayed_number) % 600)%60)%10;
-            if (displayed_number == set_time)
+            if (displayed_number == set_time - 1)
               begin
-                mod_cnt = mod_cnt + 1;
+                if (set_time != 0) mod_cnt = mod_cnt + 1;
                 LED_3 = (mod_cnt)/1000;
                 LED_2 = (mod_cnt % 1000)/100;
                 LED_1 = ((mod_cnt % 1000)%100)/10;
