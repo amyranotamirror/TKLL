@@ -20,13 +20,21 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module Pomodoro_timer(
+module Pomodoro_display(
     clk,
     rst,
     btn,
     sclk,
     rclk,
-    dio
+    dio,
+    
+    //TESTING PURPOSE
+    displayed_number,
+    mod_cnt,
+    one_second_counter,
+    state, next_state,
+    LED_0, LED_1, LED_2, LED_3, LED_4, LED_5, LED_6, LED_7,
+    NUM_0, NUM_1, NUM_2, NUM_3, NUM_4, NUM_5, NUM_6, NUM_7
     );
     
     input clk; //Default Arty-Z7 Clock: 125 MHz
@@ -36,27 +44,29 @@ module Pomodoro_timer(
     output rclk; //Storage register signal
     output dio; //Sequential input data for Module 8 LED 7 Segment
     
+    //TESTING PURPOSE
+    output reg [15:0]   displayed_number,
+                        mod_cnt;
+    output reg [26:0]   one_second_counter;
+    output reg [3:0]    next_state, state,
+                        LED_0, LED_1, LED_2, LED_3, LED_4, LED_5, LED_6, LED_7;
+    output [7:0]        NUM_0, NUM_1, NUM_2, NUM_3, NUM_4, NUM_5, NUM_6, NUM_7;
+                     
+    
     parameter       COUNT_LIM = 27'd125000000; //Count up to 125M ticks (1s)
     parameter       LED_WIDTH = 'd32; //4-bit binary with 8 digits (4x8 = 32 bits
     parameter       mins5 = 'd300, mins10 = 'd600, mins25 = 'd1500, mins50 = 'd3000;
                     
     parameter       BTN3 = 4'b1000, BTN2 = 4'b0100,
                     BTN1 = 4'b0010, BTN0 = 4'b0001;
-    parameter       DEFAULT_STATE = 4'b0000;
-                    
+    parameter       DEFAULT_STATE = 4'b0000;  
+                  
     reg [15:0]                  data;
     reg [2:0]                   cnt;
-    reg [15:0]                  displayed_number = 'd0;
     reg [15:0]                  set_time;
-    reg [15:0]                  mod_cnt;
-    reg [26:0]                  one_second_counter; 
     wire                        one_second_enable;
     wire                        vld;
     reg                         stop;
-    reg [3:0]                   state, next_state;
-    
-    reg [3:0]                   LED_0, LED_1, LED_2, LED_3, LED_4, LED_5, LED_6, LED_7;
-    wire [7:0]                  NUM_0, NUM_1, NUM_2, NUM_3, NUM_4, NUM_5, NUM_6, NUM_7;
     
     always @(posedge clk or posedge rst)
         begin
@@ -71,31 +81,31 @@ module Pomodoro_timer(
                 else
                     one_second_counter <= one_second_counter + 1;
             end
-        end
-        
+        end 
+    
     always @(btn, rst) begin
-        stop <= 1'b0;
-        if (rst) next_state <= DEFAULT_STATE;
-        else begin
-            next_state <= btn;
-            state <= next_state;
-            case(btn)
-                BTN3: begin 
-                    set_time = mins5;//5 minutes
-                    if (state != BTN3) mod_cnt = 'd0;
-                end
-                BTN2: begin 
-                    set_time = mins10;//10 minutes
-                    if (state != BTN2) mod_cnt = 'd0;
-                end
-                BTN1: begin set_time = mins25;//25 minutes
-                    if (state != BTN1) mod_cnt = 'd0;
-                         end
-                BTN0: begin set_time = mins50;//50 minutes
-                    if (state != BTN0) mod_cnt = 'd0;
-                         end
-                default: mod_cnt <= mod_cnt;
-                endcase
+    stop <= 1'b0;
+    if (rst) next_state <= DEFAULT_STATE;
+    else begin
+        next_state <= btn;
+        state <= next_state;
+        case(btn)
+            BTN3: begin 
+                set_time = mins5;//5 minutes
+                if (state != BTN3) mod_cnt = 'd0;
+            end
+            BTN2: begin 
+                set_time = mins10;//10 minutes
+                if (state != BTN2) mod_cnt = 'd0;
+            end
+            BTN1: begin set_time = mins25;//25 minutes
+                if (state != BTN1) mod_cnt = 'd0;
+                     end
+            BTN0: begin set_time = mins50;//50 minutes
+                if (state != BTN0) mod_cnt = 'd0;
+                     end
+            default: mod_cnt <= mod_cnt;
+            endcase
         end
     end
     
