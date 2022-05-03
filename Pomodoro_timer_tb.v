@@ -15,7 +15,7 @@ module Pomodoro_timer_tb ();
     //Clock Generator
     initial begin
         clk = 1'b0;
-        forever #0.01 clk = ~clk;
+        forever #0.005 clk = ~clk; //Clock cycle = 0.01(ns)
     end
     
     Pomodoro_display Timer( clk,
@@ -32,7 +32,7 @@ module Pomodoro_timer_tb ();
                             next_state, state,
                             LED_0, LED_1, LED_2, LED_3, LED_4, LED_5, LED_6, LED_7,
                             NUM_0, NUM_1, NUM_2, NUM_3, NUM_4, NUM_5, NUM_6, NUM_7);
-    defparam Timer.COUNT_LIM = 'd5; //Frequency = 5Hz
+    defparam Timer.COUNT_LIM = 'd1; //Frequency = 1Hz
     
     initial begin
         //Initial reset
@@ -42,14 +42,14 @@ module Pomodoro_timer_tb ();
         
         //Button 3: 5 mins
         #1          btn = 4'b1000;//Once
-        #0.05       btn = 4'b0000;
-        #4          btn = 4'b1000;//Twice
-        #0.02       btn = 4'b0000;
+        #0.05       btn = 4'b0000;//DONE clock
+        #3.5        btn = 4'b1000;//Twice
+        #0.1       btn = 4'b0000;//DONE clock
         
         //Button 2: 10 mins
         #3.5        btn = 4'b0100;//10mins setup
         #0.02       btn = 4'b0000;
-        #6.5        rst = 1'b1;
+        #6.5        rst = 1'b1;//DONE clock
         #0.02       rst = 1'b0;
                     btn = 4'b0100; //10mins setup
         #0.01       btn = 4'b0000;
