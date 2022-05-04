@@ -52,13 +52,10 @@ module Pomodoro_timer(
     reg [DAT_WIDTH - 1:0]       data;
     reg [15:0]                  displayed_number = 'd0;
     reg [15:0]                  set_time;
-    reg [15:0]                  mod_cnt;
     reg [26:0]                  one_second_counter; 
     wire                        one_second_enable;
-    reg                         vld = 1'b1;
     reg                         stop;
     reg [3:0]                   state, next_state;
-    //wire [3:0]                  btn_detector;
     
     reg [3:0]                   LED_0, LED_1, LED_2, LED_3, LED_4, LED_5, LED_6, LED_7;
     wire [7:0]                  NUM_0, NUM_1, NUM_2, NUM_3, NUM_4, NUM_5, NUM_6, NUM_7;
@@ -67,7 +64,6 @@ module Pomodoro_timer(
         begin
             if(rst) begin
                 one_second_counter <= 0;
-                mod_cnt <= 0;
             end
             else begin
                 if(one_second_counter == COUNT_LIM - 1) 
@@ -77,35 +73,32 @@ module Pomodoro_timer(
             end
         end
     assign one_second_enable = (one_second_counter == COUNT_LIM - 1) ? 1 : 0;
-        
-    //always @(btn_detector or rst) begin
+
     always @(posedge clk) begin
         if (rst) begin
             stop <= 1'b1;
             next_state <= DEFAULT_STATE;
             set_time <= 4'b0000;
         end
+        else if (displayed_number == set_time + 1)begin
+             stop <= 1'b1;
+             end
         else if(btn) begin
             stop <= 1'b0;
             state <= next_state;
             next_state <= btn;
-            //case(btn_detector)
             case(btn)
                 BTN3: begin 
                     set_time = mins5;//5 minutes
-                    if (state != BTN3) mod_cnt = 'd0;
                 end
                 BTN2: begin 
                     set_time = mins10;//10 minutes
-                    if (state != BTN2) mod_cnt = 'd0;
                 end
                 BTN1: begin set_time = mins25;//25 minutes
-                    if (state != BTN1) mod_cnt = 'd0;
                          end
                 BTN0: begin set_time = mins50;//50 minutes
-                    if (state != BTN0) mod_cnt = 'd0;
                          end
-                default: mod_cnt <= mod_cnt;
+                default: set_time = 0;
             endcase
         end
     end
@@ -122,18 +115,11 @@ module Pomodoro_timer(
             LED_6 <= ((set_time - displayed_number) % 600)/60;
             LED_5 <= (((set_time - displayed_number) % 600)%60)/10;
             LED_4 <= (((set_time - displayed_number) % 600)%60)%10;
-            if (displayed_number == set_time - 1)
-              begin
-                if(set_time != 0)
-                    mod_cnt = mod_cnt + 1;
-                LED_3 = (mod_cnt)/1000;
-                LED_2 = (mod_cnt % 1000)/100;
-                LED_1 = ((mod_cnt % 1000)%100)/10;
-                LED_0 = ((mod_cnt % 1000)%100)%10; 
-                displayed_number <= 0;
-                stop <= 1'b1;                     
-              end
-           end
+            LED_3 <= (set_time) /600;
+            LED_2 <= ((set_time) % 600)/60;
+            LED_1 <= (((set_time) % 600)%60)/10;
+            LED_0 <= (((set_time) % 600)%60)%10;
+         end
     end  
     
     
@@ -145,11 +131,6 @@ module Pomodoro_timer(
     BCD_7_Segment display_5(.BCD(LED_5), .segment(NUM_5));
     BCD_7_Segment display_6(.BCD(LED_6), .segment(NUM_6));
     BCD_7_Segment display_7(.BCD(LED_7), .segment(NUM_7));
-    
-//    edge_detector dectector0(.clk(clk), .rst(rst), .in(btn[0]), .out(btn_detector[0]));
-//    edge_detector dectector1(.clk(clk), .rst(rst), .in(btn[1]), .out(btn_detector[1]));
-//    edge_detector dectector2(.clk(clk), .rst(rst), .in(btn[2]), .out(btn_detector[2]));
-//    edge_detector dectector3(.clk(clk), .rst(rst), .in(btn[3]), .out(btn_detector[3]));
     
     always @(posedge clk) begin
         if (rst) data <= {DAT_WIDTH {1'b0}};
@@ -171,7 +152,7 @@ module Pomodoro_timer(
         .clk        (clk),
         .rst        (rst),
         .dat        (data),
-        .vld        (vld),
+        .vld        (1'b1),
     
         .sclk       (sclk),
         .rclk       (rclk),
