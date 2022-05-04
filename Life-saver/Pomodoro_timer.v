@@ -37,7 +37,7 @@ module Pomodoro_timer(
     output dio; //Sequential input data for Module 8 LED 7 Segment
     
     parameter       COUNT_LIM = 27'd125000000; //Count up to 125M ticks (1s)
-    parameter       LED_WIDTH = 'd32; //4-bit binary with 8 digits (4x8 = 32 bits
+    parameter       LED_WIDTH = 'd32; //4-bit binary with 8 digits (4x8 = 32 bits)
     parameter       mins5 = 'd300, mins10 = 'd600, mins25 = 'd1500, mins50 = 'd3000;
                     
     parameter       BTN3 = 4'b1000, BTN2 = 4'b0100,
