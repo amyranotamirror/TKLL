@@ -66,7 +66,6 @@ module Pomodoro_timer(
     always @(posedge clk or posedge rst)
         begin
             if(rst) begin
-                stop <= 1'b1;
                 one_second_counter <= 0;
                 mod_cnt <= 0;
             end
