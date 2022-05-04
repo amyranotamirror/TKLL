@@ -84,14 +84,14 @@ module Pomodoro_display(
         end 
     assign one_second_enable = (one_second_counter == COUNT_LIM - 1) ? 1 : 0;
     
-    always @(btn_detector or posedge rst) begin
+    always @(btn_detector or rst) begin
     if (rst) begin
         next_state <= DEFAULT_STATE;
-        set_time <= 1'b0;
+        set_time = 4'b0000;
     end
     else begin
         stop <= 1'b0;
-        next_state <= btn;
+        next_state = btn;
         state <= next_state;
         case(btn_detector)
             BTN3: begin 
