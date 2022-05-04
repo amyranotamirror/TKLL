@@ -111,8 +111,8 @@ module Pomodoro_timer(
     end
     
     
-    always @(posedge clk or posedge rst) begin
-        if(rst || btn) begin
+    always @(posedge clk) begin
+        if (rst || btn != 4'b0000) begin
             displayed_number <= 0;
             if(rst) {LED_0, LED_1, LED_2, LED_3, LED_4, LED_5, LED_6, LED_7} = {LED_WIDTH{1'b0}};
         end
