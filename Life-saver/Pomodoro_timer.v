@@ -82,8 +82,9 @@ module Pomodoro_timer(
     //always @(btn_detector or rst) begin
     always @(posedge clk) begin
         if (rst) begin
+            stop <= 1'b1;
             next_state <= DEFAULT_STATE;
-            set_time = 4'b0000;
+            set_time <= 4'b0000;
         end
         else if(btn) begin
             stop <= 1'b0;
